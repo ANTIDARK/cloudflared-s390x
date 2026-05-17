@@ -1,11 +1,7 @@
 name: Build cloudflared (s390x)
 
 on:
-  push:
-    branches: ["master"]
-  pull_request:
-    branches: ["master"]
-  workflow_dispatch: {}
+  workflow_dispatch:
 
 jobs:
   build-s390x:
@@ -42,8 +38,16 @@ jobs:
           mkdir -p dist
           mv cloudflared dist/cloudflared-linux-${TARGET_ARCH}
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
+      - name: Generate release tag from build time
+        id: release_tag
+        run: |
+          echo "tag=$(date -u +'%Y%m%d%H%M%S')" >> $GITHUB_OUTPUT
+
+      - name: Upload build to GitHub Release
+        uses: softprops/action-gh-release@v1
         with:
-          name: cloudflared-linux-s390x
-          path: dist/cloudflared-linux-s390x
+          tag_name: ${{ steps.release_tag.outputs.tag }}
+          name: ${{ steps.release_tag.outputs.tag }}
+          files: dist/cloudflared-linux-s390x
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
